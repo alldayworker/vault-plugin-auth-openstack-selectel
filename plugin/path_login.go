@@ -69,7 +69,7 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 		return logical.ErrorResponse(fmt.Sprintf("invalid role: %v", err)), nil
 	}
 
-	client, err := b.getClient(ctx, req.Storage)
+	client, err := b.getClient(ctx, req.Storage, role)
 	if err != nil {
 		msg := "openstack client error"
 		b.Logger().Error(msg, "error", err)
@@ -164,7 +164,7 @@ func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logica
 		return logical.ErrorResponse(fmt.Sprintf("policies on role '%s' have changed, cannot renew", roleName)), nil
 	}
 
-	client, err := b.getClient(ctx, req.Storage)
+	client, err := b.getClient(ctx, req.Storage, role)
 	if err != nil {
 		msg := "openstack client error"
 		b.Logger().Error(msg, "error", err)

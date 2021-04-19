@@ -48,7 +48,7 @@ func (b *OpenStackAuthBackend) Close() {
 	b.client = nil
 }
 
-func (b *OpenStackAuthBackend) getClient(ctx context.Context, s logical.Storage) (*gophercloud.ServiceClient, error) {
+func (b *OpenStackAuthBackend) getClient(ctx context.Context, s logical.Storage, r *Role) (*gophercloud.ServiceClient, error) {
 	b.clientMutex.RLock()
 	if b.client != nil {
 		defer b.clientMutex.RUnlock()
@@ -87,6 +87,20 @@ func (b *OpenStackAuthBackend) getClient(ctx context.Context, s logical.Storage)
 	}
 	if config.TenantName != "" {
 		opts.AuthInfo.ProjectName = config.TenantName
+	}
+
+	if r.ProjectID != "" {
+		opts.AuthInfo.ProjectID = r.ProjectID
+	}
+	if r.ProjectName != "" {
+		opts.AuthInfo.ProjectName = r.ProjectName
+	}
+
+	if r.TenantID != "" {
+		opts.AuthInfo.ProjectID = r.TenantID
+	}
+	if r.TenantName != "" {
+		opts.AuthInfo.ProjectName = r.TenantName
 	}
 
 	authOpts, err := clientconfig.AuthOptions(opts)

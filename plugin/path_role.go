@@ -62,6 +62,22 @@ var roleFields map[string]*framework.FieldSchema = map[string]*framework.FieldSc
 		Default:     1,
 		Description: "The number of times an instance can try authentication.",
 	},
+	"tenant_id": {
+		Type:        framework.TypeString,
+		Description: "Unique ID of the tenant. Overwrites global tenant_id",
+	},
+	"tenant_name": {
+		Type:        framework.TypeString,
+		Description: "Unique ID of the tenant. Overwrites global tenant_name",
+	},
+	"project_id": {
+		Type:        framework.TypeString,
+		Description: "Unique ID of the project. Overwrites global project_id",
+	},
+	"project_name": {
+		Type:        framework.TypeString,
+		Description: "Unique ID of the project. Overwrites global project_name",
+	},
 }
 
 func NewPathRole(b *OpenStackAuthBackend) []*framework.Path {
@@ -128,6 +144,10 @@ func (b *OpenStackAuthBackend) readRoleHandler(ctx context.Context, req *logical
 			"metadata_key": role.MetadataKey,
 			"auth_period":  int64(role.AuthPeriod / time.Second),
 			"auth_limit":   role.AuthLimit,
+			"project_id":   role.ProjectID,
+			"project_name": role.ProjectName,
+			"tenant_id":    role.TenantID,
+			"tenant_name":  role.TenantName,
 		},
 	}
 
@@ -185,6 +205,26 @@ func (b *OpenStackAuthBackend) updateRoleHandler(ctx context.Context, req *logic
 	val, ok = data.GetOk("auth_limit")
 	if ok {
 		role.AuthLimit = val.(int)
+	}
+
+	val, ok = data.GetOk("project_id")
+	if ok {
+		role.ProjectID = val.(string)
+	}
+
+	val, ok = data.GetOk("project_name")
+	if ok {
+		role.ProjectName = val.(string)
+	}
+
+	val, ok = data.GetOk("tenant_id")
+	if ok {
+		role.TenantID = val.(string)
+	}
+
+	val, ok = data.GetOk("tenant_name")
+	if ok {
+		role.TenantName = val.(string)
 	}
 
 	warnings, err := role.Validate(b.System())
