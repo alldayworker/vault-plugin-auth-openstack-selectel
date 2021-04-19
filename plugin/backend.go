@@ -121,6 +121,12 @@ func (b *OpenStackAuthBackend) getClient(ctx context.Context, s logical.Storage,
 
 	b.client = client
 
+	if opts.AuthInfo.ProjectID != "" {
+		b.Logger().Info(fmt.Sprintf("using openstack project with id %s", opts.AuthInfo.ProjectID))
+	} else {
+		b.Logger().Info(fmt.Sprintf("using openstack project with name %s", opts.AuthInfo.ProjectName))
+	}
+
 	return b.client, nil
 }
 
