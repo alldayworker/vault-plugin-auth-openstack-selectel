@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -72,7 +73,7 @@ func (at *Attestor) AttestMetadata(instance *servers.Server, metadataKey string,
 	}
 
 	if val != roleName {
-		return errors.New("metadata role name mismatched")
+		return fmt.Errorf("metadata role name mismatched: expected %s, got %s", val, roleName)
 	}
 
 	return nil
@@ -114,7 +115,7 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string) error {
 		}
 	}
 
-	return errors.New("address mismatched")
+	return fmt.Errorf("address mismatched: none of %v belongs to instance", addrs)
 }
 
 // AttestTenantID is used to attest the tenant ID of OpenStack instance.
@@ -124,7 +125,7 @@ func (at *Attestor) AttestTenantID(instance *servers.Server, tenantID string) er
 	}
 
 	if instance.TenantID != tenantID {
-		return errors.New("tenant ID mismatched")
+		return fmt.Errorf("tenant ID mismatched: expected %s, got %s", instance.TenantID, tenantID)
 	}
 
 	return nil
@@ -137,7 +138,7 @@ func (at *Attestor) AttestUserID(instance *servers.Server, userID string) error 
 	}
 
 	if instance.UserID != userID {
-		return errors.New("user ID mismatched")
+		return fmt.Errorf("user ID mismatched: expected %s, got %s", instance.UserID, userID)
 	}
 
 	return nil
