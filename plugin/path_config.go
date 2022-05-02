@@ -19,6 +19,10 @@ var configFields map[string]*framework.FieldSchema = map[string]*framework.Field
 		Type:        framework.TypeString,
 		Description: "Keystone endpoint URL.",
 	},
+	"availability": {
+		Type:        framework.TypeString,
+		Description: "Keystone endpoint interface.",
+	},
 	"token": {
 		Type:        framework.TypeString,
 		Description: "Pre-generated authentication token.",
@@ -110,6 +114,7 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 	res := &logical.Response{
 		Data: map[string]interface{}{
 			"auth_url":                config.AuthURL,
+			"availability":            config.Availability,
 			"user_id":                 config.UserID,
 			"username":                config.Username,
 			"project_id":              config.ProjectID,
@@ -145,6 +150,11 @@ func (b *OpenStackAuthBackend) updateConfigHandler(ctx context.Context, req *log
 	val, ok = data.GetOk("auth_url")
 	if ok {
 		config.AuthURL = val.(string)
+	}
+
+	val, ok = data.GetOk("availability")
+	if ok {
+		config.Availability = val.(string)
 	}
 
 	val, ok = data.GetOk("token")

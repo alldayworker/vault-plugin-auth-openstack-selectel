@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	AuthURL               string   `json:"auth_url" structs:"auth_url" mapstructure:"auth_url"`
+	Availability          string   `json:"availability" structs:"availability" mapstructure:"availability"`
 	Token                 string   `json:"token" structs:"token" mapstructure:"token"`
 	UserID                string   `json:"user_id" structs:"user_id" mapstructure:"user_id"`
 	Username              string   `json:"username" structs:"username" mapstructure:"username"`

@@ -114,7 +114,15 @@ func (b *OpenStackAuthBackend) getClient(ctx context.Context, s logical.Storage,
 		return nil, err
 	}
 
-	client, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{})
+	availability := gophercloud.Availability(config.Availability)
+	if config.Availability == "" {
+		availability = gophercloud.AvailabilityPublic
+	}
+	b.Logger().Debug(fmt.Sprintf("using openstack endpoint %s interface", availability))
+
+	client, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{
+		Availability: availability,
+	})
 	if err != nil {
 		return nil, err
 	}
