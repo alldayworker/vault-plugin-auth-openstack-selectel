@@ -1,8 +1,8 @@
-version: '2'
+version: "2"
 
 vars:
   NAME: vault-plugin-auth-openstack
-  VERSION: 0.5.1
+  VERSION: 0.6.0
 
 tasks:
   build:
@@ -29,13 +29,13 @@ tasks:
     cmds:
       - mkdir -p release
       - task: package
-        vars: {OS: "linux", ARCH: "amd64"}
+        vars: { OS: "linux", ARCH: "amd64" }
       - task: package
-        vars: {OS: "linux", ARCH: "arm64"}
+        vars: { OS: "linux", ARCH: "arm64" }
       - task: package
-        vars: {OS: "linux", ARCH: "arm"}
+        vars: { OS: "linux", ARCH: "arm" }
       - task: package
-        vars: {OS: "darwin", ARCH: "amd64"}
+        vars: { OS: "darwin", ARCH: "amd64" }
   github-release:
     deps: [release]
     cmds:
