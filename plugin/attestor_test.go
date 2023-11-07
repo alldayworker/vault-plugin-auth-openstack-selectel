@@ -33,6 +33,8 @@ const (
 	wrongIPv6   string = "2001:db8::2"
 	proxyIPv4   string = "192.168.2.1"
 	proxyIPv6   string = "2001:db8:1::1"
+	natIPv4     string = "192.168.3.1"
+	natIPv6     string = "2001:db8:2::1"
 )
 
 func TestAttest(t *testing.T) {
@@ -160,46 +162,53 @@ func TestAttestStatus(t *testing.T) {
 
 func TestAttestAddr(t *testing.T) {
 	var tests = []struct {
-		accessIPv4 string
-		accessIPv6 string
-		addresses  []string
-		request    []string
-		result     bool
+		accessIPv4                 string
+		accessIPv6                 string
+		addresses                  []string
+		additionalAcceptedPrefixes []string
+		request                    []string
+		result                     bool
 	}{
 		// success: IPv4 only
-		{correctIPv4, "", []string{correctIPv4}, []string{correctIPv4}, true},
+		{correctIPv4, "", []string{correctIPv4}, []string{}, []string{correctIPv4}, true},
 		// success: IPv6 only
-		{correctIPv6, "", []string{correctIPv6}, []string{correctIPv6}, true},
+		{correctIPv6, "", []string{correctIPv6}, []string{}, []string{correctIPv6}, true},
 		// success: IPv4 only - not in addresses list
-		{correctIPv4, "", []string{}, []string{correctIPv4}, true},
+		{correctIPv4, "", []string{}, []string{}, []string{correctIPv4}, true},
 		// success: IPv6 only - not in addresses list
-		{correctIPv6, "", []string{}, []string{correctIPv6}, true},
+		{correctIPv6, "", []string{}, []string{}, []string{correctIPv6}, true},
 		// success: IPv4 only - only in addresses list
-		{"", "", []string{correctIPv4}, []string{correctIPv4}, true},
+		{"", "", []string{correctIPv4}, []string{}, []string{correctIPv4}, true},
 		// success: IPv6 only - only in addresses list
-		{"", "", []string{correctIPv6}, []string{correctIPv6}, true},
+		{"", "", []string{correctIPv6}, []string{}, []string{correctIPv6}, true},
 		// success: IPv4 - only in addresses list + other
-		{"", "", []string{correctIPv4, wrongIPv4}, []string{correctIPv4}, true},
-		{"", "", []string{correctIPv4, wrongIPv6}, []string{correctIPv4}, true},
-		{"", "", []string{correctIPv4, wrongIPv4, wrongIPv6}, []string{correctIPv4}, true},
-		{"", "", []string{wrongIPv4, correctIPv4, wrongIPv6}, []string{correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv4}, []string{}, []string{correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv6}, []string{}, []string{correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv4, wrongIPv6}, []string{}, []string{correctIPv4}, true},
+		{"", "", []string{wrongIPv4, correctIPv4, wrongIPv6}, []string{}, []string{correctIPv4}, true},
 		// fail: wrong IPv4
-		{wrongIPv4, "", []string{wrongIPv4}, []string{correctIPv4}, false},
-		{wrongIPv4, "", []string{}, []string{correctIPv4}, false},
-		{"", "", []string{wrongIPv4}, []string{correctIPv4}, false},
-		{"", "", []string{wrongIPv4, "192.168.1.3"}, []string{correctIPv4}, false},
+		{wrongIPv4, "", []string{wrongIPv4}, []string{}, []string{correctIPv4}, false},
+		{wrongIPv4, "", []string{}, []string{}, []string{correctIPv4}, false},
+		{"", "", []string{wrongIPv4}, []string{}, []string{correctIPv4}, false},
+		{"", "", []string{wrongIPv4, "192.168.1.3"}, []string{}, []string{correctIPv4}, false},
 
 		// simulate proxy, correct IP only in additional request addresses
-		{correctIPv4, "", []string{correctIPv4}, []string{proxyIPv4, correctIPv4}, true},
-		{correctIPv4, "", []string{}, []string{proxyIPv4, correctIPv4}, true},
-		{correctIPv6, "", []string{correctIPv6}, []string{proxyIPv6, correctIPv6}, true},
-		{correctIPv6, "", []string{}, []string{proxyIPv6, correctIPv6}, true},
-		{"", "", []string{correctIPv4}, []string{proxyIPv4, correctIPv4}, true},
-		{"", "", []string{correctIPv4, wrongIPv4}, []string{proxyIPv4, correctIPv4}, true},
-		{wrongIPv4, "", []string{wrongIPv4}, []string{proxyIPv4, correctIPv4}, false},
-		{wrongIPv4, "", []string{}, []string{proxyIPv4, correctIPv4}, false},
-		{"", "", []string{wrongIPv4}, []string{proxyIPv4, correctIPv4}, false},
-		{"", "", []string{wrongIPv4, "192.168.1.3"}, []string{proxyIPv4, correctIPv4}, false},
+		{correctIPv4, "", []string{correctIPv4}, []string{}, []string{proxyIPv4, correctIPv4}, true},
+		{correctIPv4, "", []string{}, []string{}, []string{proxyIPv4, correctIPv4}, true},
+		{correctIPv6, "", []string{correctIPv6}, []string{}, []string{proxyIPv6, correctIPv6}, true},
+		{correctIPv6, "", []string{}, []string{}, []string{proxyIPv6, correctIPv6}, true},
+		{"", "", []string{correctIPv4}, []string{}, []string{proxyIPv4, correctIPv4}, true},
+		{"", "", []string{correctIPv4, wrongIPv4}, []string{}, []string{proxyIPv4, correctIPv4}, true},
+		{wrongIPv4, "", []string{wrongIPv4}, []string{}, []string{proxyIPv4, correctIPv4}, false},
+		{wrongIPv4, "", []string{}, []string{}, []string{proxyIPv4, correctIPv4}, false},
+		{"", "", []string{wrongIPv4}, []string{}, []string{proxyIPv4, correctIPv4}, false},
+		{"", "", []string{wrongIPv4, "192.168.1.3"}, []string{}, []string{proxyIPv4, correctIPv4}, false},
+
+		// simulate NAT, correct IP only in additional accepted prefixes
+		{wrongIPv4, wrongIPv6, []string{}, []string{fmt.Sprintf("%s/32", natIPv4)}, []string{natIPv4}, true},
+		{wrongIPv4, wrongIPv6, []string{}, []string{"192.168.99.0/24"}, []string{natIPv4}, false},
+		{wrongIPv4, wrongIPv6, []string{}, []string{fmt.Sprintf("%s/128", natIPv6)}, []string{natIPv6}, true},
+		{wrongIPv4, wrongIPv6, []string{}, []string{"2001:db8:99::1"}, []string{natIPv6}, false},
 	}
 
 	_, storage := newTestBackend(t)
@@ -228,7 +237,7 @@ func TestAttestAddr(t *testing.T) {
 			}
 		}
 
-		err := attestor.AttestAddr(instance, test.request)
+		err := attestor.AttestAddr(instance, test.request, test.additionalAcceptedPrefixes)
 		if (err == nil) != test.result {
 			t.Errorf("unexpected result: %v - %v", test, err)
 		}

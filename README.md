@@ -92,7 +92,7 @@ This plugin gets the instance information from the OpenStack API and attestates 
 3. Get the role configuration based on the role name. If the role configuration does not exist, the authenticate fails.
 4. Validate the authentication period specified in the role with the creation time of the instance. If the deadline was exceeded, the authentication fails.
 5. Validate the limit of authentication attempt count specified in the role. If authentication exceeds the maximum number of attempts, the authentication fails.
-6. Validate the instance IP address with the remote IP address of `vault login`. If address mismatched, the authentication fails. If configured also the IP addresses from the request headers are used for validation.
+6. Validate the instance IP address with the remote IP address of `vault login`. If address mismatched, the authentication fails. If configured also the IP addresses from the request headers are used for validation. The role config can contain additional prefixes to accept, e.g. when the instance is using the router NAT.
 7. Validate the status of the instance. If the instance is not active, the authentication fails.
 8. Validate the role name contained in the metadata of the instance with the key specified in the role configuration. If the key of metadata does not exist or role name is mismatched, the authentication fails.
 9. Validate the tenant ID of the instance with the role configuration. If the tenand ID is mismatched, the authentication fails. This validation is performed only if the tenant ID is specified in the role configuration.

@@ -194,7 +194,7 @@ func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logica
 			attestAddresses = append(attestAddresses, val...)
 		}
 	}
-	err = attestor.AttestAddr(instance, attestAddresses)
+	err = attestor.AttestAddr(instance, attestAddresses, role.AdditionalAcceptedPrefixes)
 	if err != nil {
 		return logical.ErrorResponse(fmt.Sprintf("failed to renew: %v", err)), nil
 	}
