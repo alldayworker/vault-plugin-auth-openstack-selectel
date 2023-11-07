@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -37,7 +38,7 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addrs []string)
 		return err
 	}
 
-	err = at.AttestAddr(instance, addrs)
+	err = at.AttestAddr(instance, addrs, role.AdditionalAcceptedPrefixes)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func (at *Attestor) AttestStatus(instance *servers.Server) error {
 
 // AttestAddr is used to attest the IP address of OpenStack instance
 // with source IP address.
-func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string) error {
+func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string, additionalAcceptedPrefixes []string) error {
 	var instanceAddresses map[string][]address
 
 	for _, addr := range addrs {
@@ -111,6 +112,16 @@ func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string) error {
 				if val.Address == addr {
 					return nil
 				}
+			}
+		}
+	}
+
+	for _, prefix := range additionalAcceptedPrefixes {
+		for _, addr := range addrs {
+			if _, cidr, err := net.ParseCIDR(prefix); err != nil {
+				return err
+			} else if cidr.Contains(net.ParseIP(addr)) {
+				return nil
 			}
 		}
 	}
