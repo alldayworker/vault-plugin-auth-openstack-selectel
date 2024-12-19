@@ -100,7 +100,7 @@ func (b *OpenStackAuthBackend) getClient(ctx context.Context, s logical.Storage)
 		return nil, err
 	}
 
-	client, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{})
+	client, err := openstack.NewComputeV2(provider, gophercloud.EndpointOpts{Region: config.RegionName,})
 	if err != nil {
 		return nil, err
 	}

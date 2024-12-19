@@ -22,6 +22,7 @@ type Config struct {
 	ProjectDomainName string `json:"project_domain_name" structs:"project_domain_name" mapstructure:"project_domain_name"`
 	DomainID          string `json:"domain_id" structs:"domain_id" mapstructure:"domain_id"`
 	DomainName        string `json:"domain_name" structs:"domain_name" mapstructure:"domain_name"`
+	RegionName        string `json:"region_name" structs:"region_name" mapstructure:"region_name"`
 }
 
 func readConfig(ctx context.Context, s logical.Storage) (*Config, error) {

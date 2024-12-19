@@ -75,6 +75,10 @@ var configFields map[string]*framework.FieldSchema = map[string]*framework.Field
 		Type:        framework.TypeString,
 		Description: "Name of a domain which can be used to identify the source domain of either a user or a project.",
 	},
+	"region_name": {
+		Type:        framework.TypeString,
+		Description: "Name of a region which can be used to auth.",
+	},
 }
 
 func NewPathConfig(b *OpenStackAuthBackend) []*framework.Path {
@@ -118,6 +122,7 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 			"project_domain_name": config.ProjectDomainName,
 			"domain_id":           config.DomainID,
 			"domain_name":         config.DomainName,
+			"region_name":         config.RegionName,
 		},
 	}
 
@@ -210,6 +215,11 @@ func (b *OpenStackAuthBackend) updateConfigHandler(ctx context.Context, req *log
 	val, ok = data.GetOk("domain_name")
 	if ok {
 		config.DomainName = val.(string)
+	}
+
+	val, ok = data.GetOk("region_name")
+	if ok {
+		config.RegionName = val.(string)
 	}
 
 	entry, err := logical.StorageEntryJSON("config", config)
