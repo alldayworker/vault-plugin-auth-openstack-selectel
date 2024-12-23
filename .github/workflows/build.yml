@@ -13,7 +13,7 @@ jobs:
 
     - name: Install tools
       run: |
-        Gsh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.0.0
+        sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d v3.0.0
         sudo mv ./bin/task /usr/local/bin
 
     - name: Build
