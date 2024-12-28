@@ -4,22 +4,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
 type Role struct {
-	Name        string        `json:"name" structs:"name" mapstructure:"name"`
-	Policies    []string      `json:"policies" structs:"policies" mapstructure:"policies"`
-	TTL         time.Duration `json:"ttl" structs:"ttl" mapstructure:"ttl"`
-	MaxTTL      time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
-	Period      time.Duration `json:"period" structs:"period" mapstructure:"period"`
-	MetadataKey string        `json:"metadata_key" structs:"metadata_key" mapstructure:"metadata_key"`
-	TenantID    string        `json:"tenant_id" structs:"tenant_id" mapstructure:"tenant_id"`
-	UserID      string        `json:"user_id" structs:"user_id" mapstructure:"user_id"`
-	AuthPeriod  time.Duration `json:"auth_period" structs:"auth_period" mapstructure:"auth_period"`
-	AuthLimit   int           `json:"auth_limit" structs:"auth_limit" mapstructure:"auth_limit"`
+	Name                       string        `json:"name" structs:"name" mapstructure:"name"`
+	Policies                   []string      `json:"policies" structs:"policies" mapstructure:"policies"`
+	TTL                        time.Duration `json:"ttl" structs:"ttl" mapstructure:"ttl"`
+	MaxTTL                     time.Duration `json:"max_ttl" structs:"max_ttl" mapstructure:"max_ttl"`
+	Period                     time.Duration `json:"period" structs:"period" mapstructure:"period"`
+	MetadataKey                string        `json:"metadata_key" structs:"metadata_key" mapstructure:"metadata_key"`
+	TenantID                   string        `json:"tenant_id" structs:"tenant_id" mapstructure:"tenant_id"`
+	TenantName                 string        `json:"tenant_name" structs:"tenant_name" mapstructure:"tenant_name"`
+	ProjectID                  string        `json:"project_id" structs:"project_id" mapstructure:"project_id"`
+	ProjectName                string        `json:"project_name" structs:"project_name" mapstructure:"project_name"`
+	UserID                     string        `json:"user_id" structs:"user_id" mapstructure:"user_id"`
+	AuthPeriod                 time.Duration `json:"auth_period" structs:"auth_period" mapstructure:"auth_period"`
+	AuthLimit                  int           `json:"auth_limit" structs:"auth_limit" mapstructure:"auth_limit"`
+	AdditionalAcceptedPrefixes []string      `json:"additional_accepted_prefixes" structs:"additional_accepted_prefixes" mapstructure:"additional_accepted_prefixes"`
 }
 
 func (r *Role) Validate(sys logical.SystemView) (warnings []string, err error) {
@@ -61,6 +66,12 @@ func (r *Role) Validate(sys logical.SystemView) (warnings []string, err error) {
 
 	if r.Period > sys.MaxLeaseTTL() {
 		return warnings, fmt.Errorf("'period' of '%s' is greater than the backend's maximum lease TTL of '%s'", r.Period, sys.MaxLeaseTTL())
+	}
+
+	for _, prefix := range r.AdditionalAcceptedPrefixes {
+		if _, _, err := net.ParseCIDR(prefix); err != nil {
+			return warnings, fmt.Errorf("'%s' is not a valid CIDR", prefix)
+		}
 	}
 
 	return warnings, nil
