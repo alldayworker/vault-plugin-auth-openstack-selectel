@@ -117,22 +117,6 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 
 	res := &logical.Response{
 		Data: map[string]interface{}{
-<<<<<<< HEAD
-			"auth_url":            config.AuthURL,
-			"user_id":             config.UserID,
-			"username":            config.Username,
-			"project_id":          config.ProjectID,
-			"project_name":        config.ProjectName,
-			"tenant_id":           config.TenantID,
-			"tenant_name":         config.TenantName,
-			"user_domain_id":      config.UserDomainID,
-			"user_domain_name":    config.UserDomainName,
-			"project_domain_id":   config.ProjectDomainID,
-			"project_domain_name": config.ProjectDomainName,
-			"domain_id":           config.DomainID,
-			"domain_name":         config.DomainName,
-			"region_name":         config.RegionName,
-=======
 			"auth_url":                config.AuthURL,
 			"availability":            config.Availability,
 			"user_id":                 config.UserID,
@@ -147,8 +131,8 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 			"project_domain_name":     config.ProjectDomainName,
 			"domain_id":               config.DomainID,
 			"domain_name":             config.DomainName,
+			"region_name":             config.RegionName,
 			"request_address_headers": config.RequestAddressHeaders,
->>>>>>> 7982dd85a60915e46c4f86d777463e0de4b9f59f
 		},
 	}
 
@@ -248,15 +232,14 @@ func (b *OpenStackAuthBackend) updateConfigHandler(ctx context.Context, req *log
 		config.DomainName = val.(string)
 	}
 
-<<<<<<< HEAD
 	val, ok = data.GetOk("region_name")
 	if ok {
 		config.RegionName = val.(string)
-=======
+	}
+
 	val, ok = data.GetOk("request_address_headers")
 	if ok {
 		config.RequestAddressHeaders = val.([]string)
->>>>>>> 7982dd85a60915e46c4f86d777463e0de4b9f59f
 	}
 
 	entry, err := logical.StorageEntryJSON("config", config)
