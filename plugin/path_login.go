@@ -42,6 +42,11 @@ func NewPathLogin(b *OpenStackAuthBackend) []*framework.Path {
 }
 
 func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	config, err := readConfig(ctx, req.Storage)
+	if err != nil {
+		return nil, err
+	}
+
 	var val interface{}
 	var ok bool
 
@@ -64,7 +69,7 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 		return logical.ErrorResponse(fmt.Sprintf("invalid role: %v", err)), nil
 	}
 
-	client, err := b.getClient(ctx, req.Storage)
+	client, err := b.getClient(ctx, req.Storage, role)
 	if err != nil {
 		msg := "openstack client error"
 		b.Logger().Error(msg, "error", err)
@@ -83,7 +88,14 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 		return nil, fmt.Errorf("%s: %v", msg, err)
 	}
 
-	err = attestor.Attest(instance, role, req.Connection.RemoteAddr)
+	attestAddresses := []string{req.Connection.RemoteAddr}
+	for _, header := range config.RequestAddressHeaders {
+		if val, ok := req.Headers[header]; ok {
+			attestAddresses = append(attestAddresses, val...)
+		}
+	}
+
+	err = attestor.Attest(instance, role, attestAddresses)
 	if err != nil {
 		b.Logger().Info("attestation failed", "error", err)
 		return logical.ErrorResponse(fmt.Sprintf("failed to login: %v", err)), nil
@@ -120,6 +132,11 @@ func (b *OpenStackAuthBackend) loginHandler(ctx context.Context, req *logical.Re
 }
 
 func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
+	config, err := readConfig(ctx, req.Storage)
+	if err != nil {
+		return nil, err
+	}
+
 	if req.Auth.Alias == nil {
 		return logical.ErrorResponse("instance ID associated with token is invalid"), nil
 	}
@@ -147,7 +164,7 @@ func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logica
 		return logical.ErrorResponse(fmt.Sprintf("policies on role '%s' have changed, cannot renew", roleName)), nil
 	}
 
-	client, err := b.getClient(ctx, req.Storage)
+	client, err := b.getClient(ctx, req.Storage, role)
 	if err != nil {
 		msg := "openstack client error"
 		b.Logger().Error(msg, "error", err)
@@ -171,7 +188,13 @@ func (b *OpenStackAuthBackend) authRenewHandler(ctx context.Context, req *logica
 		return logical.ErrorResponse(fmt.Sprintf("failed to renew: %v", err)), nil
 	}
 
-	err = attestor.AttestAddr(instance, req.Connection.RemoteAddr)
+	attestAddresses := []string{req.Connection.RemoteAddr}
+	for _, header := range config.RequestAddressHeaders {
+		if val, ok := req.Headers[header]; ok {
+			attestAddresses = append(attestAddresses, val...)
+		}
+	}
+	err = attestor.AttestAddr(instance, attestAddresses, role.AdditionalAcceptedPrefixes)
 	if err != nil {
 		return logical.ErrorResponse(fmt.Sprintf("failed to renew: %v", err)), nil
 	}

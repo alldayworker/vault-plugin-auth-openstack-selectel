@@ -19,6 +19,10 @@ var configFields map[string]*framework.FieldSchema = map[string]*framework.Field
 		Type:        framework.TypeString,
 		Description: "Keystone endpoint URL.",
 	},
+	"availability": {
+		Type:        framework.TypeString,
+		Description: "Keystone endpoint interface.",
+	},
 	"token": {
 		Type:        framework.TypeString,
 		Description: "Pre-generated authentication token.",
@@ -79,6 +83,10 @@ var configFields map[string]*framework.FieldSchema = map[string]*framework.Field
 		Type:        framework.TypeString,
 		Description: "Name of a region which can be used to auth.",
 	},
+	"request_address_headers": {
+		Type:        framework.TypeStringSlice,
+		Description: "List of header names which can be used to identify the address of the request in addition to the real remote address.",
+	},
 }
 
 func NewPathConfig(b *OpenStackAuthBackend) []*framework.Path {
@@ -109,6 +117,7 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 
 	res := &logical.Response{
 		Data: map[string]interface{}{
+<<<<<<< HEAD
 			"auth_url":            config.AuthURL,
 			"user_id":             config.UserID,
 			"username":            config.Username,
@@ -123,6 +132,23 @@ func (b *OpenStackAuthBackend) readConfigHandler(ctx context.Context, req *logic
 			"domain_id":           config.DomainID,
 			"domain_name":         config.DomainName,
 			"region_name":         config.RegionName,
+=======
+			"auth_url":                config.AuthURL,
+			"availability":            config.Availability,
+			"user_id":                 config.UserID,
+			"username":                config.Username,
+			"project_id":              config.ProjectID,
+			"project_name":            config.ProjectName,
+			"tenant_id":               config.TenantID,
+			"tenant_name":             config.TenantName,
+			"user_domain_id":          config.UserDomainID,
+			"user_domain_name":        config.UserDomainName,
+			"project_domain_id":       config.ProjectDomainID,
+			"project_domain_name":     config.ProjectDomainName,
+			"domain_id":               config.DomainID,
+			"domain_name":             config.DomainName,
+			"request_address_headers": config.RequestAddressHeaders,
+>>>>>>> 7982dd85a60915e46c4f86d777463e0de4b9f59f
 		},
 	}
 
@@ -145,6 +171,11 @@ func (b *OpenStackAuthBackend) updateConfigHandler(ctx context.Context, req *log
 	val, ok = data.GetOk("auth_url")
 	if ok {
 		config.AuthURL = val.(string)
+	}
+
+	val, ok = data.GetOk("availability")
+	if ok {
+		config.Availability = val.(string)
 	}
 
 	val, ok = data.GetOk("token")
@@ -217,9 +248,15 @@ func (b *OpenStackAuthBackend) updateConfigHandler(ctx context.Context, req *log
 		config.DomainName = val.(string)
 	}
 
+<<<<<<< HEAD
 	val, ok = data.GetOk("region_name")
 	if ok {
 		config.RegionName = val.(string)
+=======
+	val, ok = data.GetOk("request_address_headers")
+	if ok {
+		config.RequestAddressHeaders = val.([]string)
+>>>>>>> 7982dd85a60915e46c4f86d777463e0de4b9f59f
 	}
 
 	entry, err := logical.StorageEntryJSON("config", config)

@@ -3,6 +3,8 @@ package plugin
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
 	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
@@ -25,7 +27,7 @@ func NewAttestor(s logical.Storage) *Attestor {
 }
 
 // Attest is used to attest a OpenStack instance based on binded role and IP address.
-func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) error {
+func (at *Attestor) Attest(instance *servers.Server, role *Role, addrs []string) error {
 	deadline, err := at.VerifyAuthPeriod(instance, role.AuthPeriod)
 	if err != nil {
 		return err
@@ -36,7 +38,7 @@ func (at *Attestor) Attest(instance *servers.Server, role *Role, addr string) er
 		return err
 	}
 
-	err = at.AttestAddr(instance, addr)
+	err = at.AttestAddr(instance, addrs, role.AdditionalAcceptedPrefixes)
 	if err != nil {
 		return err
 	}
@@ -72,7 +74,7 @@ func (at *Attestor) AttestMetadata(instance *servers.Server, metadataKey string,
 	}
 
 	if val != roleName {
-		return errors.New("metadata role name mismatched")
+		return fmt.Errorf("metadata role name mismatched: expected %s, got %s", val, roleName)
 	}
 
 	return nil
@@ -88,32 +90,43 @@ func (at *Attestor) AttestStatus(instance *servers.Server) error {
 }
 
 // AttestAddr is used to attest the IP address of OpenStack instance
-// with source IP address. This method support IPv4 only.
-func (at *Attestor) AttestAddr(instance *servers.Server, addr string) error {
-	var addresses map[string][]address
+// with source IP address.
+func (at *Attestor) AttestAddr(instance *servers.Server, addrs []string, additionalAcceptedPrefixes []string) error {
+	var instanceAddresses map[string][]address
 
-	if instance.AccessIPv4 == addr {
-		return nil
-	}
+	for _, addr := range addrs {
+		if instance.AccessIPv4 == addr {
+			return nil
+		}
+		if instance.AccessIPv6 == addr {
+			return nil
+		}
 
-	err := mapstructure.Decode(instance.Addresses, &addresses)
-	if err != nil {
-		return err
-	}
+		err := mapstructure.Decode(instance.Addresses, &instanceAddresses)
+		if err != nil {
+			return err
+		}
 
-	for _, addrs := range addresses {
-		for _, val := range addrs {
-			if val.Version != 4 {
-				continue
+		for _, instAddrs := range instanceAddresses {
+			for _, val := range instAddrs {
+				if val.Address == addr {
+					return nil
+				}
 			}
+		}
+	}
 
-			if val.Address == addr {
+	for _, prefix := range additionalAcceptedPrefixes {
+		for _, addr := range addrs {
+			if _, cidr, err := net.ParseCIDR(prefix); err != nil {
+				return err
+			} else if cidr.Contains(net.ParseIP(addr)) {
 				return nil
 			}
 		}
 	}
 
-	return errors.New("address mismatched")
+	return fmt.Errorf("address mismatched: none of %v belongs to instance", addrs)
 }
 
 // AttestTenantID is used to attest the tenant ID of OpenStack instance.
@@ -123,7 +136,7 @@ func (at *Attestor) AttestTenantID(instance *servers.Server, tenantID string) er
 	}
 
 	if instance.TenantID != tenantID {
-		return errors.New("tenant ID mismatched")
+		return fmt.Errorf("tenant ID mismatched: expected %s, got %s", instance.TenantID, tenantID)
 	}
 
 	return nil
@@ -136,7 +149,7 @@ func (at *Attestor) AttestUserID(instance *servers.Server, userID string) error 
 	}
 
 	if instance.UserID != userID {
-		return errors.New("user ID mismatched")
+		return fmt.Errorf("user ID mismatched: expected %s, got %s", instance.UserID, userID)
 	}
 
 	return nil
